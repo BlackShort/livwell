@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "96937746430",
+    "project_id": "livwell-3653d",
+    "storage_bucket": "livwell-3653d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:96937746430:android:3e5a4694c88df4862aeaaf",
+        "android_client_info": {
+          "package_name": "com.livwell.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "96937746430-r95v4avrjgelf0682mik3u6ff0q4qb6n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.livwell.app",
+            "certificate_hash": "a6820de8301b0eba7cdba3af4254a0be1ee9fc36"
+          }
+        },
+        {
+          "client_id": "96937746430-s82kku9tka2nvghbj1u008vt49q5joq5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApgv32VFo9qZ9piX2Xf1RnOUxpSfm7Tug"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "96937746430-s82kku9tka2nvghbj1u008vt49q5joq5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
