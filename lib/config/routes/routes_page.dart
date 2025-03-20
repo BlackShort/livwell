@@ -27,7 +27,7 @@ class Routes {
     GetPage(name: AppRoute.register, page: () => RegistrationPage()),
     GetPage(name: AppRoute.activity, page: () => const ActivityPage()),
     GetPage(name: AppRoute.notification, page: () => const NotificationPage()),
-    GetPage(name: AppRoute.profile, page: () => const ProfilePage()),
+    GetPage(name: AppRoute.profile, page: () => ProfilePage()),
 
     // ----------Home Routes----------
     // GetPage(name: AppRoute.referralList, page: () => ReferralList()),

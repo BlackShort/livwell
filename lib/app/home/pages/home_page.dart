@@ -24,7 +24,6 @@ class _HomePageState extends State<HomePage> {
           'LivWell',
           style: TextStyle(
             color: AppPallete.primary,
-            fontSize: 20,
             fontWeight: FontWeight.w500,
             fontFamily: 'Poppins',
           ),
@@ -65,9 +64,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           _buildTabBar(),
           _buildOrgChips(),
-          Expanded(
-            child: _buildOpportunitiesList(),
-          ),
+          Expanded(child: _buildOpportunitiesList()),
         ],
       ),
     );
@@ -79,10 +76,7 @@ class _HomePageState extends State<HomePage> {
         border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 1)),
       ),
       child: Row(
-        children: [
-          _buildTab('My Orgs', true),
-          _buildTab('Near Me', false),
-        ],
+        children: [_buildTab('My Orgs', true), _buildTab('Near Me', false)],
       ),
     );
   }
@@ -99,9 +93,10 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: (_showMyOrgs && isSelected) || (!_showMyOrgs && !isSelected)
-                  ? const Color(0xFFFFA500)
-                  : Colors.transparent,
+              color:
+                  (_showMyOrgs && isSelected) || (!_showMyOrgs && !isSelected)
+                      ? AppPallete.dullprimary
+                      : AppPallete.transparent,
               width: 2,
             ),
           ),
@@ -109,10 +104,12 @@ class _HomePageState extends State<HomePage> {
         child: Text(
           text,
           style: TextStyle(
-            color: (_showMyOrgs && isSelected) || (!_showMyOrgs && !isSelected)
-                ? const Color(0xFFFFA500)
-                : Colors.grey,
+            color:
+                (_showMyOrgs && isSelected) || (!_showMyOrgs && !isSelected)
+                    ? AppPallete.dullprimary
+                    : AppPallete.grey,
             fontWeight: FontWeight.w500,
+            fontFamily: 'Poppins',
           ),
         ),
       ),
@@ -161,9 +158,9 @@ class _HomePageState extends State<HomePage> {
 
                 return _buildOrgChip(
                   data['name'] ?? 'Unknown',
-                  Icon(iconData, color: Colors.green),
+                  Icon(iconData, color: AppPallete.dullprimary),
                 );
-              }).toList(),
+              }),
             ],
           );
         },
@@ -192,9 +189,19 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Row(
         children: [
-          CircleAvatar(backgroundColor: Colors.white, radius: 14, child: icon),
+          CircleAvatar(
+            backgroundColor: AppPallete.white,
+            radius: 14,
+            child: icon,
+          ),
           const SizedBox(width: 8),
-          Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(
+            name,
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Poppins',
+            ),
+          ),
         ],
       ),
     );
@@ -202,7 +209,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildOpportunitiesList() {
     Query query = _firestore.collection('volunteer_opportunities');
-    
+
     // Add filtering based on the selected tab
     if (_showMyOrgs) {
       // In a real app, you would get the current user's registered orgs
@@ -249,9 +256,12 @@ class _HomePageState extends State<HomePage> {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
                 child: Image.network(
-                  opportunity['imageUrl'] ?? 'https://via.placeholder.com/400x200',
+                  opportunity['imageUrl'] ??
+                      'https://via.placeholder.com/400x200',
                   width: double.infinity,
                   height: 150,
                   fit: BoxFit.cover,
@@ -271,7 +281,7 @@ class _HomePageState extends State<HomePage> {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppPallete.white,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -281,11 +291,15 @@ class _HomePageState extends State<HomePage> {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
+                          fontFamily: 'Poppins',
                         ),
                       ),
                       Text(
                         DateFormat('MMM').format(date),
-                        style: const TextStyle(fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Poppins',
+                        ),
                       ),
                     ],
                   ),
@@ -296,7 +310,7 @@ class _HomePageState extends State<HomePage> {
                 right: 12,
                 child: Container(
                   decoration: const BoxDecoration(
-                    color: Colors.white,
+                    color: AppPallete.white,
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
@@ -304,13 +318,19 @@ class _HomePageState extends State<HomePage> {
                       opportunity['isFavorite'] == true
                           ? Icons.favorite
                           : Icons.favorite_border,
-                      color: opportunity['isFavorite'] == true ? Colors.green : null,
+                      color:
+                          opportunity['isFavorite'] == true
+                              ? AppPallete.dullprimary
+                              : null,
                     ),
                     onPressed: () {
                       // Toggle favorite status in Firestore
-                      _firestore.collection('volunteer_opportunities').doc(docId).update({
-                        'isFavorite': !(opportunity['isFavorite'] ?? false)
-                      });
+                      _firestore
+                          .collection('volunteer_opportunities')
+                          .doc(docId)
+                          .update({
+                            'isFavorite': !(opportunity['isFavorite'] ?? false),
+                          });
                     },
                   ),
                 ),
@@ -328,11 +348,14 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(width: 4),
                     Text(
                       opportunity['time'] ?? '8:00 AM (EDT)',
-                      style: const TextStyle(color: Colors.grey),
+                      style: const TextStyle(color: AppPallete.grey),
                     ),
                     const SizedBox(width: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(12),
@@ -347,12 +370,17 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                    const Icon(
+                      Icons.location_on,
+                      size: 16,
+                      color: AppPallete.grey,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        opportunity['location'] ?? '3960 Brookham Drive Grove City, OH',
-                        style: const TextStyle(color: Colors.grey),
+                        opportunity['location'] ??
+                            '3960 Brookham Drive Grove City, OH',
+                        style: const TextStyle(color: AppPallete.grey),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -360,8 +388,12 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  opportunity['title'] ?? 'Pantry Assistant at The Kroger Community Food Pantry',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  opportunity['title'] ??
+                      'Pantry Assistant at The Kroger Community Food Pantry',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -370,14 +402,14 @@ class _HomePageState extends State<HomePage> {
                     Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: Colors.white,
+                          backgroundColor: AppPallete.white,
                           radius: 12,
                           child: _getOrgIcon(opportunity['orgIconType']),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           opportunity['organization'] ?? 'Mid-Ohio Foodbank',
-                          style: const TextStyle(color: Colors.grey),
+                          style: const TextStyle(color: AppPallete.grey),
                         ),
                       ],
                     ),
@@ -399,13 +431,17 @@ class _HomePageState extends State<HomePage> {
   Widget _getOrgIcon(String? iconType) {
     switch (iconType) {
       case 'eco':
-        return const Icon(Icons.eco, color: Colors.green, size: 16);
+        return const Icon(Icons.eco, color: AppPallete.dullprimary, size: 16);
       case 'pets':
-        return const Icon(Icons.pets, color: Colors.green, size: 16);
+        return const Icon(Icons.pets, color: AppPallete.dullprimary, size: 16);
       case 'sports':
-        return const Icon(Icons.sports_basketball, color: Colors.orange, size: 16);
+        return const Icon(
+          Icons.sports_basketball,
+          color: AppPallete.snackErrorBg,
+          size: 16,
+        );
       default:
-        return const Icon(Icons.eco, color: Colors.green, size: 16);
+        return const Icon(Icons.eco, color: AppPallete.dullprimary, size: 16);
     }
   }
 }

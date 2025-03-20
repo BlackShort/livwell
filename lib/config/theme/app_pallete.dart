@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppPallete {
-  // light-text: 0EBE75
+  // light-text: 15DA88
   // dark-bg: 252525
   // rgba(51, 178, 185, 1
   static const Color backgroundColor = Color(0xFFF7F7F7);

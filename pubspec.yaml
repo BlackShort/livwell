@@ -43,6 +43,9 @@ dependencies:
   share_plus: ^10.0.0
   sign_in_with_apple: ^6.1.4
   google_sign_in: ^6.3.0
+  hive: ^2.2.3
+  uuid: ^4.5.1
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +63,7 @@ flutter:
     - assets/images/
     - assets/logo/
     - assets/icons/
+    - assets/icon/
     - assets/svgs/
     - assets/fonts/
 

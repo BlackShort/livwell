@@ -1,86 +1,88 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:livwell/app/auth/models/user_model.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:livwell/core/errors/custom_snackbar.dart';
+import 'package:livwell/core/services/auth_service.dart';
 
 class AuthController extends GetxController {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-
+  final AuthServices _authService = AuthServices();
+  
+  RxBool isLoading = false.obs;
   Rxn<User> user = Rxn<User>();
 
   @override
   void onInit() {
     super.onInit();
-    user.bindStream(_auth.authStateChanges());
+    user.bindStream(_authService.authStateChanges);
   }
 
   // Sign in with email and password
-  Future<UserCredential> signInWithEmailAndPassword(
-    String email,
-    String password,
-  ) async {
+  Future<void> signIn(Map<String, dynamic> userData) async {
     try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+      isLoading(true);
+      final userCredential = await _authService.signInWithEmailAndPassword(
+        userData['email'],
+        userData['password'],
       );
-      return userCredential;
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+
+      if (userCredential.user != null) {
+        CustomSnackbar.showSuccess(
+          title: 'Success',
+          message: 'Logged in successfully',
+        );
+      }
+    } catch (e) {
+      CustomSnackbar.showError(
+        title: 'Error',
+        message: e.toString(),
+      );
+    } finally {
+      isLoading(false);
     }
   }
 
   // Sign up with email and password
-  Future<UserCredential> signUpWithEmailAndPassword(
-    String email,
-    String password,
-    String firstName,
-    String lastName,
-  ) async {
+  Future<void> signUp(Map<String, dynamic> userData) async {
     try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+      isLoading(true);
+      final userCredential = await _authService.createUserWithEmailAndPassword(
+        userData['email'],
+        userData['password'],
       );
 
-      // Create user profile
-      await _createUserProfile(
-        uid: userCredential.user!.uid,
-        email: email,
-        firstName: firstName,
-        lastName: lastName,
+      if (userCredential.user != null) {
+        await _authService.createUserProfile({
+          'uid': userCredential.user!.uid,
+          'email': userData['email'],
+          'firstName': userData['firstName'],
+          'lastName': userData['lastName'],
+        });
+
+        await _authService.updateUserDisplayName(
+          userCredential.user!,
+          '${userData['firstName']} ${userData['lastName']}',
+        );
+
+        CustomSnackbar.showSuccess(
+          title: 'Success',
+          message: 'Account created successfully',
+        );
+      }
+    } catch (e) {
+      CustomSnackbar.showError(
+        title: 'Error',
+        message: e.toString(),
       );
-
-      // Update display name in Firebase Auth
-      await userCredential.user!.updateDisplayName('$firstName $lastName');
-
-      return userCredential;
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+    } finally {
+      isLoading(false);
     }
   }
 
   // Sign in with Google
-  Future<UserCredential> signInWithGoogle() async {
+  Future<void> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-
-      if (googleUser == null) {
-        throw Exception('Google sign in aborted');
-      }
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
+      isLoading(true);
+      final userCredential = await _authService.signInWithGoogle();
 
       // Check if this is a new user
       final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
@@ -93,142 +95,132 @@ class AuthController extends GetxController {
         final lastName = names.length > 1 ? names.last : '';
 
         // Create user profile
-        await _createUserProfile(
-          uid: userCredential.user!.uid,
-          email: userCredential.user!.email ?? '',
-          firstName: firstName,
-          lastName: lastName,
-          photoUrl: userCredential.user!.photoURL,
-        );
+        await _authService.createUserProfile({
+          'uid': userCredential.user!.uid,
+          'email': userCredential.user!.email ?? '',
+          'firstName': firstName,
+          'lastName': lastName,
+          'photoUrl': userCredential.user!.photoURL,
+        });
       }
-
-      return userCredential;
     } catch (e) {
-      throw Exception('Failed to sign in with Google: ${e.toString()}');
+      CustomSnackbar.showError(
+        title: 'Error',
+        message: e.toString(),
+      );
+    } finally {
+      isLoading(false);
     }
   }
 
   // Sign in with Apple
-  Future<UserCredential> signInWithApple() async {
+  Future<void> signInWithApple() async {
     try {
-      final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-
-      final oauthCredential = OAuthProvider('apple.com').credential(
-        idToken: appleCredential.identityToken,
-        accessToken: appleCredential.authorizationCode,
-      );
-
-      final userCredential = await _auth.signInWithCredential(oauthCredential);
+      isLoading(true);
+      final userCredential = await _authService.signInWithApple();
 
       // Check if this is a new user
       final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
 
-      if (isNewUser && appleCredential.givenName != null) {
-        // Create user profile with Apple data
-        await _createUserProfile(
-          uid: userCredential.user!.uid,
-          email: userCredential.user!.email ?? '',
-          firstName: appleCredential.givenName ?? '',
-          lastName: appleCredential.familyName ?? '',
-        );
+      if (isNewUser) {
+        final displayName = userCredential.user?.displayName ?? '';
+        final names = displayName.split(' ');
+        final firstName = names.isNotEmpty ? names.first : '';
+        final lastName = names.length > 1 ? names.last : '';
 
-        // Update display name in Firebase Auth
-        await userCredential.user!.updateDisplayName(
-          '${appleCredential.givenName} ${appleCredential.familyName}',
-        );
+        // Create user profile
+        await _authService.createUserProfile({
+          'uid': userCredential.user!.uid,
+          'email': userCredential.user!.email ?? '',
+          'firstName': firstName,
+          'lastName': lastName,
+          'photoUrl': userCredential.user!.photoURL,
+        });
+
+        // Update display name if needed
+        if (displayName.isEmpty) {
+          await _authService.updateUserDisplayName(
+            userCredential.user!,
+            '$firstName $lastName',
+          );
+        }
       }
-
-      return userCredential;
     } catch (e) {
-      throw Exception('Failed to sign in with Apple: ${e.toString()}');
+      CustomSnackbar.showError(
+        title: 'Error',
+        message: e.toString(),
+      );
+    } finally {
+      isLoading(false);
     }
   }
 
   // Sign out
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    try {
+      isLoading(true);
+      await _authService.signOut();
+    } catch (e) {
+      CustomSnackbar.showError(
+        title: 'Error',
+        message: e.toString(),
+      );
+    } finally {
+      isLoading(false);
+    }
   }
 
   // Reset password
   Future<void> resetPassword(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      isLoading(true);
+      await _authService.resetPassword(email);
+      CustomSnackbar.showSuccess(
+        title: 'Success',
+        message: 'Password reset email sent',
+      );
+    } catch (e) {
+      CustomSnackbar.showError(
+        title: 'Error',
+        message: e.toString(),
+      );
+    } finally {
+      isLoading(false);
     }
-  }
-
-  // Create user profile in Firestore
-  Future<void> _createUserProfile({
-    required String uid,
-    required String email,
-    required String firstName,
-    required String lastName,
-    String? photoUrl,
-  }) async {
-    final user = UserModel(
-      uid: uid,
-      email: email,
-      firstName: firstName,
-      lastName: lastName,
-      photoUrl: photoUrl,
-      createdAt: DateTime.now(),
-    );
-
-    await _firestore.collection('users').doc(uid).set(user.toMap());
   }
 
   // Get user profile
   Future<UserModel?> getUserProfile(String uid) async {
     try {
-      final doc = await _firestore.collection('users').doc(uid).get();
-      if (doc.exists) {
-        return UserModel.fromMap(doc.data()!);
-      }
-      return null;
+      isLoading(true);
+      return await _authService.getUserProfile(uid);
     } catch (e) {
-      throw Exception('Failed to get user profile: ${e.toString()}');
+      CustomSnackbar.showError(
+        title: 'Error',
+        message: e.toString(),
+      );
+      return null;
+    } finally {
+      isLoading(false);
     }
   }
 
   // Update user profile
   Future<void> updateUserProfile(UserModel user) async {
     try {
-      await _firestore.collection('users').doc(user.uid).update(user.toMap());
+      isLoading(true);
+      await _authService.updateUserProfile(user);
+      CustomSnackbar.showSuccess(
+        title: 'Success',
+        message: 'Profile updated successfully',
+      );
     } catch (e) {
-      throw Exception('Failed to update user profile: ${e.toString()}');
-    }
-  }
-
-  // Handle Firebase Auth exceptions
-  String _handleAuthException(FirebaseAuthException exception) {
-    switch (exception.code) {
-      case 'user-not-found':
-        return 'No user found with this email.';
-      case 'wrong-password':
-        return 'Wrong password provided.';
-      case 'email-already-in-use':
-        return 'The email address is already in use.';
-      case 'invalid-email':
-        return 'The email address is invalid.';
-      case 'weak-password':
-        return 'The password is too weak.';
-      case 'operation-not-allowed':
-        return 'This sign-in method is not allowed. Please contact support.';
-      case 'user-disabled':
-        return 'This user has been disabled. Please contact support.';
-      case 'too-many-requests':
-        return 'Too many requests. Try again later.';
-      case 'network-request-failed':
-        return 'A network error occurred. Check your connection.';
-      default:
-        return 'An error occurred: ${exception.message}';
+      CustomSnackbar.showError(
+        title: 'Error',
+        message: e.toString(),
+      );
+    } finally {
+      isLoading(false);
     }
   }
 }

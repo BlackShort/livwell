@@ -6,7 +6,6 @@ import 'package:livwell/app/notification/notification_page.dart';
 import 'package:livwell/app/profile/pages/profile_page.dart';
 import 'package:livwell/app/registration/pages/registration_page.dart';
 import 'package:livwell/app/home/pages/home_page.dart';
-import 'package:livwell/core/utils/firestore_seeder.dart';
 
 class BasePage extends StatelessWidget {
   const BasePage({super.key});
@@ -16,13 +15,12 @@ class BasePage extends StatelessWidget {
     return CustomBottomBar(
       items: [
         BottomBarModel(
-          page: const HomePage(),
+          page: HomePage(),
           icon: 'assets/icons/home_out.svg',
           title: 'Home',
         ),
         BottomBarModel(
-          // page: const RegistrationPage(),
-          page: SeedDatabaseScreen(),
+          page: const RegistrationPage(),
           icon: 'assets/icons/ticket_out.svg',
           title: 'Registration',
         ),
@@ -37,7 +35,7 @@ class BasePage extends StatelessWidget {
           title: 'Notification',
         ),
         BottomBarModel(
-          page: const ProfilePage(),
+          page: ProfilePage(),
           icon: 'assets/icons/user_out.svg',
           title: 'Account',
         ),

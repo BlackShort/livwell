@@ -132,7 +132,7 @@ class FirestoreSeeder {
 
 /// A widget that demonstrates how to use the FirestoreSeeder.
 class SeedDatabaseScreen extends StatelessWidget {
-  const SeedDatabaseScreen({Key? key}) : super(key: key);
+  const SeedDatabaseScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

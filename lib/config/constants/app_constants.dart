@@ -6,6 +6,10 @@ class AppConstants {
   static const String appName = 'LivWell';
   static const String apple = 'assets/images/apple.png';
   static const String google = 'assets/images/google.png';
+  static const String applogo = 'assets/logo/livwell_logo.png';
+  static const String dog = 'assets/svgs/dog.svg';
+  static const String kids = 'assets/svgs/kids.svg';
+
 
   // ------------onboard.dart-----------//
   static const String welcomeAppName = 'MoneyCart';
@@ -90,7 +94,6 @@ class AppConstants {
   static const String loginError = 'Invalid username or password.';
 
   // Image paths
-  static const String applogo = 'assets/icons/mainlogo.png';
   static const String backgroundImagePath = 'assets/images/background.png';
 
   // Video paths
