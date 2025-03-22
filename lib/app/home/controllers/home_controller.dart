@@ -28,6 +28,14 @@ class HomeController extends GetxController {
   final List<String> _userOrgIds = [
     'org1',
     'org2',
+    'org3',
+    'org4',
+    'org5',
+    'org6',
+    'org7',
+    'org8',
+    'org9',
+    'org10',
   ]; // In a real app, fetch this from user profile
 
   @override

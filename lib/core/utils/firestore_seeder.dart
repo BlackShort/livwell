@@ -25,7 +25,7 @@ class FirestoreSeeder {
         'icon': 'eco',
         'iconColor': 'green',
         'description': 'Fighting hunger in central Ohio',
-        'website': 'https://midohiofoodbank.org'
+        'website': 'https://midohiofoodbank.org',
       },
       {
         'id': 'org2',
@@ -33,8 +33,8 @@ class FirestoreSeeder {
         'icon': 'pets',
         'iconColor': 'green',
         'description': 'Protecting endangered tortoise species',
-        'website': 'https://tortoiseconservation.org'
-      }
+        'website': 'https://tortoiseconservation.org',
+      },
     ];
 
     for (var org in organizations) {
@@ -46,6 +46,7 @@ class FirestoreSeeder {
     print('Organizations seeded successfully!');
   }
 
+  /// Seed the volunteer_opportunities collection.
   /// Seed the volunteer_opportunities collection.
   Future<void> _seedOpportunities() async {
     final opportunities = [
@@ -62,7 +63,8 @@ class FirestoreSeeder {
         'imageUrl': 'https://your-storage-url.com/foodbank-image.jpg',
         'isFavorite': false,
         'orgIconType': 'eco',
-        'description': 'Help sort and distribute food to community members in need.'
+        'description':
+            'Help sort and distribute food to community members in need.',
       },
       {
         'id': 'opportunity2',
@@ -77,8 +79,56 @@ class FirestoreSeeder {
         'imageUrl': 'https://your-storage-url.com/basketball-image.jpg',
         'isFavorite': true,
         'orgIconType': 'sports',
-        'description': 'Assist with organizing a youth basketball tournament.'
-      }
+        'description': 'Assist with organizing a youth basketball tournament.',
+      },
+      {
+        'id': 'opportunity3',
+        'title': 'Tree Plantation Drive Volunteer',
+        'organization': 'Mid-Ohio Foodbank',
+        'organizationId': 'org1',
+        'location': 'Grove City Public Park, OH',
+        'date': Timestamp.fromDate(DateTime(2025, 9, 12)),
+        'time': '10:00 AM (EDT)',
+        'shifts': 1,
+        'spotsLeft': 10,
+        'imageUrl': 'https://your-storage-url.com/tree-plantation.jpg',
+        'isFavorite': false,
+        'orgIconType': 'eco',
+        'description':
+            'Join us in planting trees and making the community greener.',
+      },
+      {
+        'id': 'opportunity4',
+        'title': 'Community Clean-up Volunteer',
+        'organization': 'Tortoise Conservation',
+        'organizationId': 'org2',
+        'location': 'Downtown Columbus, OH',
+        'date': Timestamp.fromDate(DateTime(2025, 9, 20)),
+        'time': '7:00 AM (EDT)',
+        'shifts': 2,
+        'spotsLeft': 8,
+        'imageUrl': 'https://your-storage-url.com/cleanup-event.jpg',
+        'isFavorite': false,
+        'orgIconType': 'pets',
+        'description':
+            'Participate in a community clean-up drive and make a difference.',
+      },
+      {
+        'id': 'opportunity5',
+        'title': 'Animal Shelter Assistant',
+        'organization': 'Tortoise Conservation',
+        'organizationId': 'org2',
+        'location': '456 Animal Lane, Columbus, OH',
+        'date': Timestamp.fromDate(DateTime(2025, 10, 5)),
+        'time': '11:00 AM (EDT)',
+        'shifts': 2,
+        'spotsLeft': 4,
+        'imageUrl': 'https://your-storage-url.com/animal-shelter.jpg',
+        'isFavorite': true,
+        'orgIconType': 'pets',
+        'description':
+            'Assist in caring for animals and helping with shelter maintenance.',
+      },
     ];
 
     for (var opportunity in opportunities) {
@@ -98,8 +148,8 @@ class FirestoreSeeder {
         'displayName': 'Jane Doe',
         'email': 'jane@example.com',
         'registeredOrgs': ['org1', 'org2'],
-        'favoriteOpportunities': ['opportunity2']
-      }
+        'favoriteOpportunities': ['opportunity2'],
+      },
     ];
 
     for (var user in users) {
@@ -116,8 +166,8 @@ class FirestoreSeeder {
         'opportunityId': 'opportunity1',
         'userId': 'user1',
         'registeredAt': Timestamp.fromDate(DateTime(2025, 7, 25)),
-        'status': 'confirmed'
-      }
+        'status': 'confirmed',
+      },
     ];
 
     for (var registration in registrations) {
@@ -137,9 +187,7 @@ class SeedDatabaseScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Seed Database'),
-      ),
+      appBar: AppBar(title: const Text('Seed Database')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
