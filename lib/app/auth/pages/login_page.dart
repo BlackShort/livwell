@@ -80,19 +80,21 @@ class _LoginPageState extends State<LoginPage> {
         onTap: () => FocusScope.of(context).unfocus(),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 40),
-              _buildLoginForm(),
-              const SizedBox(height: 24),
-              _buildDivider(),
-              const SizedBox(height: 24),
-              _buildSocialLoginButtons(),
-              const SizedBox(height: 24),
-              _buildSignUpPrompt(),
-            ],
+          child: Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 40),
+                _buildLoginForm(),
+                const SizedBox(height: 24),
+                _buildDivider(),
+                const SizedBox(height: 24),
+                _buildSocialLoginButtons(),
+                const SizedBox(height: 24),
+                _buildSignUpPrompt(),
+              ],
+            ),
           ),
         ),
       ),
