@@ -547,10 +547,8 @@ class HomePage extends StatelessWidget {
                                   'Mid-Ohio Foodbank',
                               style: TextStyle(
                                 color: AppPallete.grey,
-                                decoration:
-                                    opportunity['organizationId'] != null
-                                        ? TextDecoration.underline
-                                        : TextDecoration.none,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Poppins',
                               ),
                             ),
                           ],
