@@ -6,7 +6,7 @@ import 'package:livwell/core/services/auth_service.dart';
 
 class AuthController extends GetxController {
   final AuthServices _authService = AuthServices();
-  
+
   RxBool isLoading = false.obs;
   Rxn<User> user = Rxn<User>();
 
@@ -32,10 +32,7 @@ class AuthController extends GetxController {
         );
       }
     } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: e.toString(),
-      );
+      CustomSnackbar.showError(title: 'Error', message: e.toString());
     } finally {
       isLoading(false);
     }
@@ -69,10 +66,7 @@ class AuthController extends GetxController {
         );
       }
     } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: e.toString(),
-      );
+      CustomSnackbar.showError(title: 'Error', message: e.toString());
     } finally {
       isLoading(false);
     }
@@ -104,10 +98,7 @@ class AuthController extends GetxController {
         });
       }
     } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: e.toString(),
-      );
+      CustomSnackbar.showError(title: 'Error', message: e.toString());
     } finally {
       isLoading(false);
     }
@@ -146,10 +137,7 @@ class AuthController extends GetxController {
         }
       }
     } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: e.toString(),
-      );
+      CustomSnackbar.showError(title: 'Error', message: e.toString());
     } finally {
       isLoading(false);
     }
@@ -161,10 +149,7 @@ class AuthController extends GetxController {
       isLoading(true);
       await _authService.signOut();
     } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: e.toString(),
-      );
+      CustomSnackbar.showError(title: 'Error', message: e.toString());
     } finally {
       isLoading(false);
     }
@@ -173,19 +158,20 @@ class AuthController extends GetxController {
   // Reset password
   Future<void> resetPassword(String email) async {
     try {
-      isLoading(true);
       await _authService.resetPassword(email);
-      CustomSnackbar.showSuccess(
-        title: 'Success',
-        message: 'Password reset email sent',
-      );
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'invalid-email':
+          throw 'The email address is not valid.';
+        case 'user-not-found':
+          throw 'No user found with this email address.';
+        case 'too-many-requests':
+          throw 'Too many requests. Please try again later.';
+        default:
+          throw 'Failed to send password reset email: ${e.message}';
+      }
     } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: e.toString(),
-      );
-    } finally {
-      isLoading(false);
+      throw 'An unexpected error occurred: $e';
     }
   }
 
@@ -195,10 +181,7 @@ class AuthController extends GetxController {
       isLoading(true);
       return await _authService.getUserProfile(uid);
     } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: e.toString(),
-      );
+      CustomSnackbar.showError(title: 'Error', message: e.toString());
       return null;
     } finally {
       isLoading(false);
@@ -215,10 +198,7 @@ class AuthController extends GetxController {
         message: 'Profile updated successfully',
       );
     } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: e.toString(),
-      );
+      CustomSnackbar.showError(title: 'Error', message: e.toString());
     } finally {
       isLoading(false);
     }

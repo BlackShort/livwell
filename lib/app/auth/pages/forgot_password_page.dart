@@ -1,37 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:livwell/app/auth/controllers/auth_controller.dart';
-import 'package:livwell/app/auth/pages/forgot_password_page.dart';
-import 'package:livwell/app/auth/pages/signup_page.dart';
 import 'package:livwell/app/auth/widgets/custom_text_field.dart';
 import 'package:livwell/app/common/widgets/loading_button.dart';
-import 'package:livwell/app/common/widgets/secondary_button.dart';
 import 'package:livwell/config/constants/app_constants.dart';
 import 'package:livwell/config/theme/app_pallete.dart';
 import 'package:form_validator/form_validator.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final AuthController controller = Get.find<AuthController>();
 
   final _formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  bool _obscurePassword = true;
 
   // Regular expressions stored as constants to avoid recreation
   static final RegExp _emailRegex = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-  );
-
-  static final RegExp _passwordRegex = RegExp(
-    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$',
   );
 
   // Cache validators to avoid rebuilding them
@@ -41,35 +32,16 @@ class _LoginPageState extends State<LoginPage> {
           .regExp(_emailRegex, 'Please enter a valid email address')
           .build();
 
-  late final passwordValidator =
-      ValidationBuilder()
-          .required('Password is required')
-          .regExp(
-            _passwordRegex,
-            'Password must be at least 8 characters long and include:\n• 1 uppercase letter\n• 1 lowercase letter\n• 1 number\n• 1 special character (!@#\$&*~)',
-          )
-          .build();
-
   @override
   void dispose() {
     emailController.dispose();
-    passwordController.dispose();
     super.dispose();
   }
 
-  void _togglePasswordVisibility() {
-    setState(() {
-      _obscurePassword = !_obscurePassword;
-    });
-  }
-
-  void _handleSignIn() async {
+  void _handleResetPassword() async {
     if (_formKey.currentState!.validate()) {
       FocusScope.of(context).unfocus();
-      await controller.signIn({
-        'email': emailController.text.trim(),
-        'password': passwordController.text.trim(),
-      });
+      await controller.resetPassword(emailController.text.trim());
     }
   }
 
@@ -77,6 +49,37 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leadingWidth: 100,
+        leading: GestureDetector(
+          onTap: () {
+            Get.back();
+          },
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.arrow_back_ios_rounded,
+                color: AppPallete.secondary,
+                size: 19,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Back',
+                style: TextStyle(
+                  color: AppPallete.secondary,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 19,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SingleChildScrollView(
@@ -94,13 +97,9 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       _buildHeader(),
                       const SizedBox(height: 40),
-                      _buildLoginForm(),
+                      _buildResetForm(),
                       const SizedBox(height: 24),
-                      _buildDivider(),
-                      const SizedBox(height: 24),
-                      _buildSocialLoginButtons(),
-                      const SizedBox(height: 24),
-                      _buildSignUpPrompt(),
+                      _buildSignInPrompt(),
                     ],
                   ),
                 ),
@@ -119,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
         Center(child: Image.asset(AppConstants.applogo, height: 80, width: 80)),
         const SizedBox(height: 10),
         const Text(
-          'Welcome back!',
+          'Forgot Password',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w500,
@@ -128,11 +127,21 @@ class _LoginPageState extends State<LoginPage> {
           ),
           textAlign: TextAlign.center,
         ),
+        const SizedBox(height: 16),
+        const Text(
+          'Enter your email address and we\'ll send you a link to reset your password.',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+            fontFamily: 'Poppins',
+          ),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }
 
-  Widget _buildLoginForm() {
+  Widget _buildResetForm() {
     return Form(
       key: _formKey,
       child: Column(
@@ -146,48 +155,14 @@ class _LoginPageState extends State<LoginPage> {
             hintText: 'Enter your email',
             validator: emailValidator,
           ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            prefixIcon: Icons.lock_rounded,
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: Colors.grey,
-              ),
-              onPressed: _togglePasswordVisibility,
-            ),
-            controller: passwordController,
-            keyboardType: TextInputType.visiblePassword,
-            labelText: 'Password',
-            hintText: 'Enter your password',
-            obscureText: _obscurePassword,
-            validator: passwordValidator,
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {
-                Get.to(ForgotPasswordPage());
-              },
-              child: const Text(
-                'Forgot Password?',
-                style: TextStyle(
-                  color: AppPallete.primary,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'Poppins',
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 32),
           Obx(
             () => SizedBox(
               width: double.infinity,
               child: LoadingButton(
-                text: 'Sign In',
+                text: 'Reset Password',
                 isLoading: controller.isLoading.value,
-                onPressed: _handleSignIn,
+                onPressed: _handleResetPassword,
               ),
             ),
           ),
@@ -196,49 +171,18 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildDivider() {
-    return const Row(
-      children: [
-        Expanded(child: Divider()),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text('OR', style: TextStyle(color: Colors.grey)),
-        ),
-        Expanded(child: Divider()),
-      ],
-    );
-  }
-
-  Widget _buildSocialLoginButtons() {
-    return Column(
-      children: [
-        SecondaryButton(
-          text: 'Continue with Google',
-          onPressed: controller.signInWithGoogle,
-          icon: AppConstants.google,
-        ),
-        const SizedBox(height: 16),
-        SecondaryButton(
-          text: 'Continue with Apple',
-          onPressed: controller.signInWithApple,
-          icon: AppConstants.apple,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSignUpPrompt() {
+  Widget _buildSignInPrompt() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Text(
-          "Don't have an account?",
+          "Remember your password?",
           style: TextStyle(fontFamily: 'Poppins'),
         ),
         TextButton(
-          onPressed: () => Get.to(const SignupPage()),
+          onPressed: () => Get.back(),
           child: const Text(
-            'Sign Up',
+            'Sign In',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,

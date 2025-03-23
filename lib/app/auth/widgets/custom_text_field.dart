@@ -8,6 +8,7 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
+  final bool readOnly; 
   final TextCapitalization? textCapitalization;
   final String? Function(String?)? validator;
 
@@ -18,6 +19,7 @@ class CustomTextField extends StatelessWidget {
     required this.labelText,
     required this.hintText,
     this.obscureText = false,
+    this.readOnly = false,
     this.prefixIcon,
     this.suffixIcon,
     this.textCapitalization = TextCapitalization.none,
@@ -30,6 +32,7 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       validator: validator,
+      readOnly: readOnly,
       decoration: InputDecoration(
         prefixIcon: Icon(prefixIcon),
         labelText: labelText,

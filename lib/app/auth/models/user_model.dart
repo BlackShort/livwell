@@ -6,6 +6,7 @@ class UserModel {
   final String email;
   final String firstName;
   final String lastName;
+  final String? phone;
   final String? photoUrl;
   final DateTime createdAt;
   final List<String> interests;
@@ -19,6 +20,7 @@ class UserModel {
     required this.firstName,
     required this.lastName,
     this.photoUrl,
+    this.phone,
     required this.createdAt,
     this.interests = const [],
     this.eventsAttended = const [],
@@ -35,6 +37,7 @@ class UserModel {
       email: map['email'] ?? '',
       firstName: map['firstName'] ?? '',
       lastName: map['lastName'] ?? '',
+      phone: map['phone'],
       photoUrl: map['photoUrl'],
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       interests: List<String>.from(map['interests'] ?? []),
@@ -52,6 +55,7 @@ class UserModel {
       'firstName': firstName,
       'lastName': lastName,
       'photoUrl': photoUrl,
+      'phone': phone,
       'createdAt': Timestamp.fromDate(createdAt),
       'interests': interests,
       'eventsAttended': eventsAttended,
@@ -65,6 +69,7 @@ class UserModel {
     String? firstName,
     String? lastName,
     String? photoUrl,
+    String? phone,
     List<String>? interests,
     List<String>? eventsAttended,
     List<String>? nonprofitsFollowed,
@@ -75,6 +80,7 @@ class UserModel {
       email: email,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
+      phone: phone ?? this.phone,
       photoUrl: photoUrl ?? this.photoUrl,
       createdAt: createdAt,
       interests: interests ?? this.interests,

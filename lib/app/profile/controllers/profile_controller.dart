@@ -1,212 +1,145 @@
-import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:livwell/app/auth/controllers/auth_controller.dart';
 import 'package:livwell/app/auth/models/user_model.dart';
-import 'package:livwell/config/routes/route_names.dart';
 import 'package:livwell/core/errors/custom_snackbar.dart';
 import 'package:livwell/core/utils/user_preferences.dart';
 
 class ProfileController extends GetxController {
-  static ProfileController instance = Get.find();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
-
-  late Rx<User?> firebaseUser;
-  Rxn<UserModel> userModel = Rxn<UserModel>();
+  final AuthController _authController = Get.find<AuthController>();
+  
+  Rx<UserModel?> userModel = Rx<UserModel?>(null);
   RxBool isLoading = false.obs;
-  var verificationId = ''.obs;
+  RxBool isEditing = false.obs;
 
+  // Form controllers from UI
+  final TextEditingController firstNameController;
+  final TextEditingController lastNameController;
+  final TextEditingController emailController;
+  final TextEditingController phoneController;
+  
+  ProfileController({
+    required this.firstNameController,
+    required this.lastNameController,
+    required this.emailController,
+    required this.phoneController,
+  });
+  
   @override
   void onInit() {
     super.onInit();
-    firebaseUser = Rx<User?>(_auth.currentUser);
-    firebaseUser.bindStream(_auth.userChanges());
-    fetchUserProfile();
+    loadUserProfile();
   }
-
-  Future<void> fetchUserProfile() async {
+  
+  @override
+  void onClose() {
+    firstNameController.dispose();
+    lastNameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    super.onClose();
+  }
+  
+  Future<void> loadUserProfile() async {
     try {
-      isLoading.value = true;
-      final userId = _auth.currentUser?.uid ?? UserPreferences.getUserId();
-      if (userId == null) return;
-      final docSnapshot =
-          await _firestore.collection('users').doc('user1').get();
-      if (docSnapshot.exists && docSnapshot.data() != null) {
-        userModel.value = UserModel.fromMap(docSnapshot.data()!);
-        await UserPreferences.setUserModel(userModel.value!);
+      isLoading(true);
+      
+      // First try to get user from preferences
+      UserModel? user = UserPreferences.getUserModel();
+      
+      // If not available in preferences, fetch from database
+      if (user == null) {
+        final currentUser = _authController.user.value;
+        if (currentUser != null) {
+          user = await _authController.getUserProfile(currentUser.uid);
+          
+          // Save to preferences for future use
+          if (user != null) {
+            await UserPreferences.setUserModel(user);
+            await UserPreferences.setUserId(currentUser.uid);
+          }
+        }
+      }
+      
+      userModel.value = user;
+      
+      // Populate form controllers if user data is available
+      if (user != null) {
+        firstNameController.text = user.firstName;
+        lastNameController.text = user.lastName;
+        emailController.text = user.email;
+        phoneController.text = user.phone ?? '';
       }
     } catch (e) {
       CustomSnackbar.showError(
         title: 'Error',
-        message: 'Failed to fetch user profile: ${e.toString()}',
+        message: 'Failed to load profile: $e',
       );
     } finally {
-      isLoading.value = false;
+      isLoading(false);
     }
   }
-
-  Future<void> createUserProfile(UserModel user) async {
-    try {
-      isLoading.value = true;
-      String uid = _auth.currentUser!.uid;
-      final docSnapshot = await _firestore.collection('users').doc(uid).get();
-
-      if (!docSnapshot.exists) {
-        await _firestore.collection('users').doc(uid).set(user.toMap());
-        userModel.value = user;
-        await UserPreferences.setUserModel(user);
-        await UserPreferences.setUserId(uid);
-        CustomSnackbar.showSuccess(
-          title: 'Success',
-          message: 'Profile created successfully',
-        );
-        Get.offAllNamed(AppRoute.base);
-      } else {
-        CustomSnackbar.showError(
-          title: 'Error',
-          message: 'Profile already exists',
-        );
-      }
-    } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: 'Failed to create user profile',
-      );
-    } finally {
-      isLoading.value = false;
-    }
+  
+  void toggleEditMode() {
+    isEditing(!isEditing.value);
   }
-
-  Future<void> updateUserProfile(
-    UserModel user, {
-    String? newPhoneNumber,
-  }) async {
+  
+  Future<void> updateProfile() async {
+    if (userModel.value == null) return;
+    
     try {
-      isLoading.value = true;
-      final uid = _auth.currentUser!.uid;
-      if (newPhoneNumber != null) {
-        await _auth.verifyPhoneNumber(
-          phoneNumber: newPhoneNumber,
-          verificationCompleted: (PhoneAuthCredential credential) async {
-            await _auth.currentUser!.updatePhoneNumber(credential);
-            await _firestore.collection('users').doc(uid).update(user.toMap());
-            userModel.value = user;
-            await fetchUserProfile();
-            Get.back();
-            CustomSnackbar.showSuccess(
-              title: 'Success',
-              message: 'Profile updated successfully',
-            );
-          },
-          verificationFailed: (e) {
-            CustomSnackbar.showError(
-              title: 'Error',
-              message: 'Phone verification failed: ${e.message}',
-            );
-          },
-          codeSent: (vId, _) {
-            verificationId.value = vId;
-          },
-          codeAutoRetrievalTimeout: (vId) {
-            verificationId.value = vId;
-          },
-        );
-      } else {
-        await _firestore.collection('users').doc(uid).update(user.toMap());
-        userModel.value = user;
-        await fetchUserProfile();
-        Get.back();
-        CustomSnackbar.showSuccess(
-          title: 'Success',
-          message: 'Profile updated successfully',
-        );
-      }
-    } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: 'Failed to update user profile',
+      isLoading(true);
+      
+      // Create updated user model
+      final updatedUser = UserModel(
+        uid: userModel.value!.uid,
+        email: emailController.text.trim(),
+        firstName: firstNameController.text.trim(),
+        lastName: lastNameController.text.trim(),
+        phone: phoneController.text.trim(),
+        photoUrl: userModel.value!.photoUrl,
+        createdAt: userModel.value!.createdAt,
       );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> updatePhoneNumberWithOtp(String smsCode) async {
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: verificationId.value,
-        smsCode: smsCode,
-      );
-      await _auth.currentUser!.updatePhoneNumber(credential);
-      await fetchUserProfile();
+      
+      // Update in database
+      await _authController.updateUserProfile(updatedUser);
+      
+      // Update in preferences
+      await UserPreferences.setUserModel(updatedUser);
+      
+      // Update local state
+      userModel.value = updatedUser;
+      
+      // Exit edit mode
+      isEditing(false);
+      
       CustomSnackbar.showSuccess(
         title: 'Success',
-        message: 'Phone number updated successfully',
+        message: 'Profile updated successfully',
       );
     } catch (e) {
       CustomSnackbar.showError(
         title: 'Error',
-        message: 'Failed to update phone number',
+        message: 'Failed to update profile: $e',
       );
-    }
-  }
-
-  Future<void> verifyOtp(String smsCode) async {
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: verificationId.value,
-        smsCode: smsCode,
-      );
-      await _auth.signInWithCredential(credential);
-      Get.offAllNamed(AppRoute.base);
-    } catch (e) {
-      CustomSnackbar.showError(title: 'Error', message: 'Invalid OTP');
-    }
-  }
-
-  Future<String?> updateProfilePhoto(String imagePath) async {
-    try {
-      isLoading.value = true;
-      final uid = _auth.currentUser!.uid;
-      final file = File(imagePath);
-      final uploadTask = await _storage
-          .ref('profile_photos/$uid.jpg')
-          .putFile(file);
-      final downloadUrl = await uploadTask.ref.getDownloadURL();
-
-      await _firestore.collection('users').doc(uid).update({
-        'photoUrl': downloadUrl,
-      });
-      if (userModel.value != null) {
-        userModel.value = userModel.value!.copyWith(photoUrl: downloadUrl);
-        await UserPreferences.setUserModel(userModel.value!);
-      }
-      return downloadUrl;
-    } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: 'Failed to upload profile photo',
-      );
-      return null;
     } finally {
-      isLoading.value = false;
+      isLoading(false);
     }
   }
-
-  Future<List<String>> fetchDummyAvatars() async {
+  
+  Future<void> logout() async {
     try {
-      final result =
-          await _storage.ref('app_data/placeholder_avatar').listAll();
-      return await Future.wait(result.items.map((ref) => ref.getDownloadURL()));
+      isLoading(true);
+      await _authController.signOut();
+      await UserPreferences.clearUserData();
+      Get.offAllNamed('/login');
     } catch (e) {
       CustomSnackbar.showError(
         title: 'Error',
-        message: 'Failed to fetch dummy avatars',
+        message: 'Failed to logout: $e',
       );
-      return [];
+    } finally {
+      isLoading(false);
     }
   }
 }
