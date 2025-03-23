@@ -5,19 +5,26 @@ import 'package:livwell/app/auth/models/user_model.dart';
 class UserPreferences {
   static final _box = Hive.box('userBox');
 
+  // Save user model with error handling
   static Future<void> setUserModel(UserModel user) async {
-    String userJson = jsonEncode(user.toMap());
-    await _box.put('user_model', userJson);
+    try {
+      String userJson = jsonEncode(user.toMap());
+      await _box.put('user_model', userJson);
+    } catch (e) {
+      print('Error saving user model: $e');
+    }
   }
 
+  // Get user model with improved error handling
   static UserModel? getUserModel() {
-    final userJson = _box.get('user_model');
-    if (userJson == null) return null;
-
     try {
+      final userJson = _box.get('user_model');
+      if (userJson == null) return null;
+
       Map<String, dynamic> userMap = jsonDecode(userJson);
       return UserModel.fromMap(userMap);
     } catch (e) {
+      print('Error getting user model: $e');
       return null;
     }
   }

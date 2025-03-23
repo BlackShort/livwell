@@ -90,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: Center(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _buildHeader(),
                       const SizedBox(height: 40),

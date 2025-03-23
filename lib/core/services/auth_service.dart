@@ -17,7 +17,10 @@ class AuthServices {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // Email & Password Sign In
-  Future<UserCredential> signInWithEmailAndPassword(String email, String password) async {
+  Future<UserCredential> signInWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
     try {
       return await _auth.signInWithEmailAndPassword(
         email: email,
@@ -29,7 +32,10 @@ class AuthServices {
   }
 
   // Email & Password Sign Up
-  Future<UserCredential> createUserWithEmailAndPassword(String email, String password) async {
+  Future<UserCredential> createUserWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
     try {
       return await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -49,7 +55,8 @@ class AuthServices {
         throw Exception('Google sign in aborted');
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -84,8 +91,12 @@ class AuthServices {
 
   // Sign Out
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    try {
+      await _googleSignIn.signOut();
+      await _auth.signOut();
+    } catch (e) {
+      throw Exception('Failed to sign out: ${e.toString()}');
+    }
   }
 
   // Reset Password
@@ -99,28 +110,71 @@ class AuthServices {
 
   // Update User Display Name
   Future<void> updateUserDisplayName(User user, String displayName) async {
-    await user.updateDisplayName(displayName);
+    try {
+      await user.updateDisplayName(displayName);
+    } catch (e) {
+      throw Exception('Failed to update display name: ${e.toString()}');
+    }
   }
 
-  // Create User Profile
-  Future<void> createUserProfile(Map<String, dynamic> userData) async {
-    final user = UserModel(
-      uid: userData['uid'],
-      email: userData['email'],
-      firstName: userData['firstName'],
-      lastName: userData['lastName'],
-      photoUrl: userData['photoUrl'],
-      createdAt: DateTime.now(),
-    );
-    
-    await _firestore.collection('users').doc(userData['uid']).set(user.toMap());
+  // Create User Profile - Improved version with consistent timestamps
+  Future<UserModel> createUserProfile(Map<String, dynamic> userData) async {
+    try {
+      // Always use server timestamp for consistency
+      final Map<String, dynamic> sanitizedData = {
+        'uid': userData['uid'] ?? '',
+        'email': userData['email'] ?? '',
+        'firstName': userData['firstName'] ?? '',
+        'lastName': userData['lastName'] ?? '',
+        'photoUrl': userData['photoUrl'],
+        'phone': userData['phone'],
+        'createdAt': FieldValue.serverTimestamp(),
+        'interests': userData['interests'] ?? [],
+        'eventsAttended': userData['eventsAttended'] ?? [],
+        'nonprofitsFollowed': userData['nonprofitsFollowed'] ?? [],
+        'isProfileComplete': userData['isProfileComplete'] ?? false,
+      };
+
+      // Store in Firestore
+      await _firestore
+          .collection('users')
+          .doc(userData['uid'])
+          .set(sanitizedData);
+      
+      // Fetch the document we just created to get the server timestamp
+      final docSnapshot = await _firestore
+          .collection('users')
+          .doc(userData['uid'])
+          .get();
+      
+      if (docSnapshot.exists && docSnapshot.data() != null) {
+        return UserModel.fromMap(docSnapshot.data()!);
+      } else {
+        // If for some reason we can't fetch, create with local timestamp
+        return UserModel(
+          uid: userData['uid'] ?? '',
+          email: userData['email'] ?? '',
+          firstName: userData['firstName'] ?? '',
+          lastName: userData['lastName'] ?? '',
+          photoUrl: userData['photoUrl'],
+          phone: userData['phone'],
+          createdAt: DateTime.now(),
+          interests: List<String>.from(userData['interests'] ?? []),
+          eventsAttended: List<String>.from(userData['eventsAttended'] ?? []),
+          nonprofitsFollowed: List<String>.from(userData['nonprofitsFollowed'] ?? []),
+          isProfileComplete: userData['isProfileComplete'] ?? false,
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to create user profile: ${e.toString()}');
+    }
   }
 
-  // Get User Profile
+  // Get User Profile - Improved with better error messaging
   Future<UserModel?> getUserProfile(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
-      if (doc.exists) {
+      if (doc.exists && doc.data() != null) {
         return UserModel.fromMap(doc.data()!);
       }
       return null;
@@ -135,6 +189,33 @@ class AuthServices {
       await _firestore.collection('users').doc(user.uid).update(user.toMap());
     } catch (e) {
       throw Exception('Failed to update user profile: ${e.toString()}');
+    }
+  }
+  
+  // Helper method for fix timestamps if needed
+  Future<void> fixUserProfileTimestamps() async {
+    try {
+      final QuerySnapshot snapshot = await _firestore.collection('users').get();
+      
+      List<Future> updateOperations = [];
+      
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        
+        if (data['createdAt'] == null) {
+          updateOperations.add(
+            _firestore.collection('users').doc(doc.id).update({
+              'createdAt': FieldValue.serverTimestamp(),
+            }),
+          );
+        }
+      }
+      
+      if (updateOperations.isNotEmpty) {
+        await Future.wait(updateOperations);
+      }
+    } catch (e) {
+      throw Exception('Failed to fix timestamps: ${e.toString()}');
     }
   }
 }

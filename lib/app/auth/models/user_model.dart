@@ -1,4 +1,3 @@
-// auth/models/user_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
@@ -30,24 +29,63 @@ class UserModel {
 
   String get fullName => '$firstName $lastName';
 
-  // Create from Firebase document
+  // Create from Firebase document with improved timestamp handling
   factory UserModel.fromMap(Map<String, dynamic> map) {
+    // Handle timestamp conversion safely
+    DateTime parseTimestamp(dynamic value) {
+      if (value == null) {
+        return DateTime.now();
+      } else if (value is Timestamp) {
+        return value.toDate();
+      } else if (value is DateTime) {
+        return value;
+      } else if (value is String) {
+        // Try to parse string as ISO 8601 date
+        try {
+          return DateTime.parse(value);
+        } catch (_) {
+          return DateTime.now();
+        }
+      } else if (value is int) {
+        // Assume milliseconds since epoch
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      } else if (value is Map) {
+        // Handle potential serialized timestamp objects
+        if (value.containsKey('seconds') && value.containsKey('nanoseconds')) {
+          return Timestamp(
+            value['seconds'] as int, 
+            value['nanoseconds'] as int
+          ).toDate();
+        }
+      }
+      return DateTime.now();
+    }
+
+    // Parse lists safely
+    List<String> parseStringList(dynamic value) {
+      if (value == null) return [];
+      if (value is List) {
+        return value.map((item) => item?.toString() ?? '').toList();
+      }
+      return [];
+    }
+
     return UserModel(
-      uid: map['uid'] ?? '',
-      email: map['email'] ?? '',
-      firstName: map['firstName'] ?? '',
-      lastName: map['lastName'] ?? '',
-      phone: map['phone'],
-      photoUrl: map['photoUrl'],
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
-      interests: List<String>.from(map['interests'] ?? []),
-      eventsAttended: List<String>.from(map['eventsAttended'] ?? []),
-      nonprofitsFollowed: List<String>.from(map['nonprofitsFollowed'] ?? []),
-      isProfileComplete: map['isProfileComplete'] ?? false,
+      uid: map['uid']?.toString() ?? '',
+      email: map['email']?.toString() ?? '',
+      firstName: map['firstName']?.toString() ?? '',
+      lastName: map['lastName']?.toString() ?? '',
+      phone: map['phone']?.toString(),
+      photoUrl: map['photoUrl']?.toString(),
+      createdAt: parseTimestamp(map['createdAt']),
+      interests: parseStringList(map['interests']),
+      eventsAttended: parseStringList(map['eventsAttended']),
+      nonprofitsFollowed: parseStringList(map['nonprofitsFollowed']),
+      isProfileComplete: map['isProfileComplete'] == true,
     );
   }
 
-  // Convert to map for Firebase
+  // Convert to map for Firebase with safe timestamp conversion
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
@@ -56,7 +94,8 @@ class UserModel {
       'lastName': lastName,
       'photoUrl': photoUrl,
       'phone': phone,
-      'createdAt': Timestamp.fromDate(createdAt),
+      // Fix nullable check
+      'createdAt': createdAt,
       'interests': interests,
       'eventsAttended': eventsAttended,
       'nonprofitsFollowed': nonprofitsFollowed,
@@ -89,4 +128,15 @@ class UserModel {
       isProfileComplete: isProfileComplete ?? this.isProfileComplete,
     );
   }
+
+  // Add equality operator for comparing objects
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UserModel &&
+          uid == other.uid &&
+          email == other.email;
+  
+  @override
+  int get hashCode => uid.hashCode ^ email.hashCode;
 }

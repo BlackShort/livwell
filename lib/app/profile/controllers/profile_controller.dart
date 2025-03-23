@@ -2,28 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:livwell/app/auth/controllers/auth_controller.dart';
 import 'package:livwell/app/auth/models/user_model.dart';
+import 'package:livwell/app/auth/pages/login_page.dart';
 import 'package:livwell/core/errors/custom_snackbar.dart';
-import 'package:livwell/core/utils/user_preferences.dart';
+import 'package:livwell/core/services/user_preferences.dart';
 
 class ProfileController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   
-  Rx<UserModel?> userModel = Rx<UserModel?>(null);
-  RxBool isLoading = false.obs;
-  RxBool isEditing = false.obs;
+  // State variables
+  final Rx<UserModel?> userModel = Rx<UserModel?>(null);
+  final RxBool isLoading = false.obs;
+  final RxBool isEditing = false.obs;
 
-  // Form controllers from UI
-  final TextEditingController firstNameController;
-  final TextEditingController lastNameController;
-  final TextEditingController emailController;
-  final TextEditingController phoneController;
+  // Form controllers
+  late final TextEditingController firstNameController;
+  late final TextEditingController lastNameController;
+  late final TextEditingController emailController;
+  late final TextEditingController phoneController;
   
-  ProfileController({
-    required this.firstNameController,
-    required this.lastNameController,
-    required this.emailController,
-    required this.phoneController,
-  });
+  ProfileController() {
+    // Initialize controllers here instead of requiring them as parameters
+    firstNameController = TextEditingController();
+    lastNameController = TextEditingController();
+    emailController = TextEditingController();
+    phoneController = TextEditingController();
+  }
   
   @override
   void onInit() {
@@ -44,31 +47,15 @@ class ProfileController extends GetxController {
     try {
       isLoading(true);
       
-      // First try to get user from preferences
-      UserModel? user = UserPreferences.getUserModel();
+      // Try to get user from Hive first (local storage)
+      final user = UserPreferences.getUserModel();
       
-      // If not available in preferences, fetch from database
-      if (user == null) {
-        final currentUser = _authController.user.value;
-        if (currentUser != null) {
-          user = await _authController.getUserProfile(currentUser.uid);
-          
-          // Save to preferences for future use
-          if (user != null) {
-            await UserPreferences.setUserModel(user);
-            await UserPreferences.setUserId(currentUser.uid);
-          }
-        }
-      }
-      
-      userModel.value = user;
-      
-      // Populate form controllers if user data is available
       if (user != null) {
-        firstNameController.text = user.firstName;
-        lastNameController.text = user.lastName;
-        emailController.text = user.email;
-        phoneController.text = user.phone ?? '';
+        // Use cached user data if available
+        _updateUserData(user);
+      } else {
+        // Fallback to fetching from database
+        await _fetchUserFromDatabase();
       }
     } catch (e) {
       CustomSnackbar.showError(
@@ -80,25 +67,68 @@ class ProfileController extends GetxController {
     }
   }
   
+  Future<void> _fetchUserFromDatabase() async {
+    final currentUser = _authController.user.value;
+    if (currentUser != null) {
+      final user = await _authController.getUserProfile(currentUser.uid);
+      
+      if (user != null) {
+        // Save to preferences for future use
+        await UserPreferences.setUserModel(user);
+        await UserPreferences.setUserId(currentUser.uid);
+        
+        // Update UI
+        _updateUserData(user);
+      }
+    }
+  }
+  
+  void _updateUserData(UserModel user) {
+    userModel.value = user;
+    
+    // Populate form controllers
+    firstNameController.text = user.firstName;
+    lastNameController.text = user.lastName;
+    emailController.text = user.email;
+    phoneController.text = user.phone ?? '';
+  }
+  
   void toggleEditMode() {
+    if (isEditing.value) {
+      // Cancel edit - restore original values
+      final user = userModel.value;
+      if (user != null) {
+        firstNameController.text = user.firstName;
+        lastNameController.text = user.lastName;
+        phoneController.text = user.phone ?? '';
+      }
+    }
+    
     isEditing(!isEditing.value);
   }
   
   Future<void> updateProfile() async {
     if (userModel.value == null) return;
     
+    // Form validation
+    if (firstNameController.text.trim().isEmpty || 
+        lastNameController.text.trim().isEmpty) {
+      CustomSnackbar.showError(
+        title: 'Validation Error',
+        message: 'First name and last name are required',
+      );
+      return;
+    }
+    
     try {
       isLoading(true);
       
       // Create updated user model
-      final updatedUser = UserModel(
-        uid: userModel.value!.uid,
-        email: emailController.text.trim(),
+      final updatedUser = userModel.value!.copyWith(
         firstName: firstNameController.text.trim(),
         lastName: lastNameController.text.trim(),
         phone: phoneController.text.trim(),
-        photoUrl: userModel.value!.photoUrl,
-        createdAt: userModel.value!.createdAt,
+        isProfileComplete: true,
       );
       
       // Update in database
@@ -131,8 +161,7 @@ class ProfileController extends GetxController {
     try {
       isLoading(true);
       await _authController.signOut();
-      await UserPreferences.clearUserData();
-      Get.offAllNamed('/login');
+      Get.offAll(() => LoginPage());
     } catch (e) {
       CustomSnackbar.showError(
         title: 'Error',
