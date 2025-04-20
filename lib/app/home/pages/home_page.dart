@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:livwell/app/home/pages/join_org_page.dart';
+import 'package:livwell/app/search/widgets/search_widget.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:livwell/config/theme/app_pallete.dart';
 import 'package:livwell/app/home/controllers/home_controller.dart';
@@ -29,34 +29,21 @@ class HomePage extends StatelessWidget {
         ),
         centerTitle: false,
         actions: [
-          IconButton(
-            onPressed: () {
-              // Implement search functionality
-            },
-            icon: SvgPicture.asset(
-              'assets/icons/search_out.svg',
-              width: 19,
-              height: 19,
-              colorFilter: const ColorFilter.mode(
-                AppPallete.blackSecondary,
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              // Implement filter functionality
-            },
-            icon: SvgPicture.asset(
-              'assets/icons/slider_out.svg',
-              width: 26,
-              height: 26,
-              colorFilter: const ColorFilter.mode(
-                AppPallete.blackSecondary,
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
+          // IconButton(
+          //   onPressed: () {
+              
+          //   },
+          //   icon: SvgPicture.asset(
+          //     'assets/icons/search_out.svg',
+          //     width: 19,
+          //     height: 19,
+          //     colorFilter: const ColorFilter.mode(
+          //       AppPallete.blackSecondary,
+          //       BlendMode.srcIn,
+          //     ),
+          //   ),
+          // ),
+          SearchWidget(),
         ],
       ),
       body: RefreshIndicator(
@@ -129,13 +116,14 @@ class HomePage extends StatelessWidget {
           return _buildShimmerOrgChips();
         }
 
-        if (controller.organizations.isEmpty) {
+        // Only show empty state if not loading
+        if (!controller.isLoading && controller.organizations.isEmpty) {
           return const Center(child: Text('No organizations found'));
         }
 
         return ListView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           children: [
             // _buildAddChip(),
             ...controller.organizations.map((doc) {
@@ -166,7 +154,7 @@ class HomePage extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
-        _buildAddChip(),
+        // _buildAddChip(),
         ...List.generate(5, (index) => _buildShimmerOrgChip()),
       ],
     );
@@ -201,16 +189,16 @@ class HomePage extends StatelessWidget {
     }
   }
 
-  Widget _buildAddChip() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: CircleAvatar(
-        backgroundColor: Colors.grey[200],
-        radius: 20,
-        child: const Icon(Icons.add, color: Colors.grey),
-      ),
-    );
-  }
+  // Widget _buildAddChip() {
+  //   return Padding(
+  //     padding: const EdgeInsets.only(right: 8),
+  //     child: CircleAvatar(
+  //       backgroundColor: Colors.grey[200],
+  //       radius: 20,
+  //       child: const Icon(Icons.add, color: Colors.grey),
+  //     ),
+  //   );
+  // }
 
   Widget _buildOrgChip(
     String name,
@@ -252,11 +240,13 @@ class HomePage extends StatelessWidget {
 
   Widget _buildOpportunitiesList() {
     return Obx(() {
+      // First, check if loading
       if (controller.isLoading) {
         return _buildShimmerOpportunities();
       }
 
-      if (controller.opportunities.isEmpty) {
+      // Only show empty state if not loading
+      if (!controller.isLoading && controller.opportunities.isEmpty) {
         return Container(
           height: 300, // Give enough height for empty state
           alignment: Alignment.center,
@@ -545,7 +535,7 @@ class HomePage extends StatelessWidget {
                             Text(
                               opportunity['organization'] ??
                                   'Mid-Ohio Foodbank',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppPallete.grey,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Poppins',

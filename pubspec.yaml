@@ -48,13 +48,14 @@ dependencies:
   hive_flutter: ^1.1.0
 
 dev_dependencies:
+  icons_launcher: ^3.0.1
+  flutter_launcher_icons: "^0.14.3"
   flutter_test:
     sdk: flutter
 
   hive_generator: ^2.0.1
   build_runner: ^2.4.11
   flutter_lints: ^5.0.0
-  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
@@ -83,17 +84,31 @@ flutter:
         - asset: assets/fonts/Poppins-Thin.ttf
           weight: 100
 
-
-flutter_launcher_icons:
-  android: true
+icons_launcher:
   image_path: "assets/logo/livwell_logo.png"
-  android_name: "ic_launcher"
-  ios_name: "AppIcon"
+  platforms:
+    android:
+      enable: true
+      image_path: "assets/logo/livwell_logo.png"
+      notification_image: "assets/ic_foreground.png"
+      adaptive_background_color: '#ffffff'
+      adaptive_foreground_image: "assets/ic_foreground.png"
+      adaptive_round_image: "assets/ic_logo_round.png"
+      adaptive_monochrome_image: "assets/ic_black_white.png"
+    ios:
+      enable: false
+    web:
+      enable: false
+    macos:
+      enable: false
+    windows:
+      enable: false
+    linux:
+      enable: false
+
 
 flutter_native_splash:
   android: true
-  ios: true
-  web: false
 
   color: "#ffffff" 
   color_dark: "#252525"  

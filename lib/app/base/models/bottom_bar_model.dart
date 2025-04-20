@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
 class BottomBarModel {
-  final Widget page;
-  final String icon;
   final String title;
+  final Widget page;
+  final String? image;
+  final IconData? icon;
   final Color? color;
 
   BottomBarModel({
-    required this.page,
-    required this.icon,
-    required this.title,
+    this.image,
+    this.icon,
     this.color,
+    required this.page,
+    required this.title,
   });
 }

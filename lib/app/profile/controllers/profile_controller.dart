@@ -21,7 +21,6 @@ class ProfileController extends GetxController {
   late final TextEditingController phoneController;
   
   ProfileController() {
-    // Initialize controllers here instead of requiring them as parameters
     firstNameController = TextEditingController();
     lastNameController = TextEditingController();
     emailController = TextEditingController();
