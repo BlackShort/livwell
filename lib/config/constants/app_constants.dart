@@ -9,7 +9,14 @@ class AppConstants {
   static const String applogo = 'assets/logo/livwell_logo.png';
   static const String dog = 'assets/svgs/dog.svg';
   static const String kids = 'assets/svgs/kids.svg';
+  static const String user = 'assets/images/user.png';
 
+  static const String notificationsTitle = 'Notifications';
+  static const String noNotifications = 'No notifications yet';
+  static const String errorLoading = 'Error loading notifications';
+  static const String retry = 'Retry';
+  static const String markAllRead = 'Mark all as read';
+  static const String deleteAll = 'Delete all';
 
   // ------------onboard.dart-----------//
   static const String welcomeAppName = 'MoneyCart';
@@ -107,5 +114,4 @@ class AppConstants {
   static const String baseUrl = 'https://api.myflutterapp.com';
   static const String loginEndpoint = '/auth/login';
   static const String signupEndpoint = '/auth/signup';
-
 }

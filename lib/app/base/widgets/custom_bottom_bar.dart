@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:livwell/app/activity/pages/activity_page.dart';
 import 'package:livwell/app/base/controllers/base_controller.dart';
 import 'package:livwell/app/base/models/bottom_bar_model.dart';
+import 'package:livwell/app/causes/pages/causes_page.dart';
+import 'package:livwell/app/donation/pages/donation_page.dart';
 import 'package:livwell/app/home/pages/home_page.dart';
-import 'package:livwell/app/notification/notification_page.dart';
 import 'package:livwell/app/profile/pages/profile_page.dart';
-import 'package:livwell/app/registration/pages/registration_page.dart';
+import 'package:livwell/app/volunteer/pages/volunteer_page.dart';
 import 'package:livwell/config/theme/app_pallete.dart';
 
 class CustomBottomBar extends StatelessWidget {
@@ -17,28 +17,33 @@ class CustomBottomBar extends StatelessWidget {
   static final List<BottomBarModel> defaultItems = [
     BottomBarModel(
       page: HomePage(),
-      icon: Icons.home_rounded,
+      // icon: Icons.home_rounded,
+      image: 'assets/icons/home_out.svg',
       title: 'Home',
     ),
     BottomBarModel(
-      page: const RegistrationPage(),
-      icon: Icons.confirmation_number,
-      title: 'Registration',
+      page: VolunteerPage(),
+      // icon: Icons.confirmation_number,
+      image: 'assets/icons/calendar_out.svg',
+      title: 'Volunteer',
     ),
     BottomBarModel(
-      page: const ActivityPage(),
-      icon: Icons.assessment,
-      title: 'Activity',
+      page: DonationPage(),
+      // icon: Icons.assessment,
+      image: 'assets/icons/donate_out.svg',
+      title: 'Give',
     ),
     BottomBarModel(
-      page: const NotificationPage(),
-      icon: Icons.notifications,
-      title: 'Notification',
+      page: const CausesPage(),
+      // icon: Icons.notifications,
+      image: 'assets/icons/cause_out.svg',
+      title: 'Causes',
     ),
     BottomBarModel(
       page: const ProfilePage(),
-      icon: Icons.person,
-      title: 'Account',
+      // icon: Icons.person,
+      image: 'assets/icons/user_out.svg',
+      title: 'Profile',
     ),
   ];
 
@@ -58,7 +63,7 @@ class CustomBottomBar extends StatelessWidget {
 
     return Obx(() {
       if (!controller.isBottomBarVisible.value) {
-        return const SizedBox.shrink(); 
+        return const SizedBox.shrink();
       }
 
       return BottomNavigationBar(

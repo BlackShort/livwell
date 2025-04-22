@@ -1,9 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:livwell/app/auth/models/user_model.dart';
 import 'package:livwell/app/home/pages/join_org_page.dart';
-import 'package:livwell/app/search/widgets/search_widget.dart';
+import 'package:livwell/app/notification/pages/notification_page.dart';
+import 'package:livwell/app/search/pages/search_pge.dart';
+import 'package:livwell/config/constants/app_constants.dart';
+import 'package:livwell/core/services/user_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:livwell/config/theme/app_pallete.dart';
 import 'package:livwell/app/home/controllers/home_controller.dart';
@@ -13,37 +18,61 @@ class HomePage extends StatelessWidget {
 
   final HomeController controller = Get.put(HomeController());
   final ScrollController _scrollController = ScrollController();
+  final UserModel? currentUser = UserPreferences.getUserModel();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppPallete.white,
       appBar: AppBar(
-        title: const Text(
-          'LivWell',
-          style: TextStyle(
-            color: AppPallete.primary,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Poppins',
-          ),
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundImage: AssetImage(AppConstants.user),
+              backgroundColor: Colors.transparent,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Hi ${currentUser?.firstName ?? 'User'}',
+              style: const TextStyle(
+                color: AppPallete.primary,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ],
         ),
         centerTitle: false,
         actions: [
-          // IconButton(
-          //   onPressed: () {
-              
-          //   },
-          //   icon: SvgPicture.asset(
-          //     'assets/icons/search_out.svg',
-          //     width: 19,
-          //     height: 19,
-          //     colorFilter: const ColorFilter.mode(
-          //       AppPallete.blackSecondary,
-          //       BlendMode.srcIn,
-          //     ),
-          //   ),
-          // ),
-          SearchWidget(),
+          IconButton(
+            onPressed: () {
+              Get.to((SearchPage()));
+            },
+            icon: SvgPicture.asset(
+              'assets/icons/search_out.svg',
+              width: 19,
+              height: 19,
+              colorFilter: const ColorFilter.mode(
+                AppPallete.blackSecondary,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              Get.to(NotificationPage());
+            },
+            icon: SvgPicture.asset(
+              'assets/icons/bell_out.svg',
+              width: 19,
+              height: 19,
+              colorFilter: const ColorFilter.mode(
+                AppPallete.blackSecondary,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
         ],
       ),
       body: RefreshIndicator(
@@ -53,185 +82,9 @@ class HomePage extends StatelessWidget {
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            _buildTabBar(),
-            _buildOrgChips(),
+            // _buildTabBar(),
+            // _buildOrgChips(),
             _buildOpportunitiesList(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTabBar() {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 1)),
-      ),
-      child: Row(
-        children: [_buildTab('My Orgs', true), _buildTab('Near Me', false)],
-      ),
-    );
-  }
-
-  Widget _buildTab(String text, bool isSelected) {
-    return Obx(() {
-      final isActive =
-          (controller.showMyOrgs && isSelected) ||
-          (!controller.showMyOrgs && !isSelected);
-
-      return GestureDetector(
-        onTap: () {
-          controller.toggleView(text == 'My Orgs');
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color:
-                    isActive ? AppPallete.dullprimary : AppPallete.transparent,
-                width: 2,
-              ),
-            ),
-          ),
-          child: Text(
-            text,
-            style: TextStyle(
-              color: isActive ? AppPallete.dullprimary : AppPallete.grey,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Poppins',
-            ),
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildOrgChips() {
-    return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Obx(() {
-        if (controller.isLoading) {
-          return _buildShimmerOrgChips();
-        }
-
-        // Only show empty state if not loading
-        if (!controller.isLoading && controller.organizations.isEmpty) {
-          return const Center(child: Text('No organizations found'));
-        }
-
-        return ListView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          children: [
-            // _buildAddChip(),
-            ...controller.organizations.map((doc) {
-              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-              String orgId = doc.id;
-              String iconName = data['icon'] ?? 'eco';
-              IconData iconData = _getIconData(iconName);
-              bool isSelected = controller.selectedOrgId == orgId;
-
-              return _buildOrgChip(
-                data['name'] ?? 'Unknown',
-                Icon(
-                  iconData,
-                  color: isSelected ? AppPallete.white : AppPallete.dullprimary,
-                ),
-                isSelected,
-                () => controller.filterByOrg(orgId),
-              );
-            }),
-          ],
-        );
-      }),
-    );
-  }
-
-  Widget _buildShimmerOrgChips() {
-    return ListView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      children: [
-        // _buildAddChip(),
-        ...List.generate(5, (index) => _buildShimmerOrgChip()),
-      ],
-    );
-  }
-
-  Widget _buildShimmerOrgChip() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        width: 100,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-    );
-  }
-
-  IconData _getIconData(String iconName) {
-    switch (iconName) {
-      case 'eco':
-        return Icons.eco;
-      case 'pets':
-        return Icons.pets;
-      case 'sports':
-        return Icons.sports;
-      default:
-        return Icons.eco;
-    }
-  }
-
-  // Widget _buildAddChip() {
-  //   return Padding(
-  //     padding: const EdgeInsets.only(right: 8),
-  //     child: CircleAvatar(
-  //       backgroundColor: Colors.grey[200],
-  //       radius: 20,
-  //       child: const Icon(Icons.add, color: Colors.grey),
-  //     ),
-  //   );
-  // }
-
-  Widget _buildOrgChip(
-    String name,
-    Icon icon,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppPallete.dullprimary : Colors.grey[100],
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor:
-                  isSelected ? AppPallete.lightprimary : AppPallete.white,
-              radius: 14,
-              child: icon,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              name,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Poppins',
-                color: isSelected ? AppPallete.white : AppPallete.black,
-              ),
-            ),
           ],
         ),
       ),

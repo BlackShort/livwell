@@ -3,9 +3,9 @@ import 'package:livwell/app/activity/pages/activity_page.dart';
 import 'package:livwell/app/auth/pages/auth_wrapper.dart';
 import 'package:livwell/app/base/pages/base_page.dart';
 import 'package:livwell/app/home/pages/home_page.dart';
-import 'package:livwell/app/notification/notification_page.dart';
+import 'package:livwell/app/notification/pages/notification_page.dart';
 import 'package:livwell/app/profile/pages/profile_page.dart';
-import 'package:livwell/app/registration/pages/registration_page.dart';
+import 'package:livwell/app/volunteer/pages/volunteer_page.dart';
 import 'package:livwell/config/routes/route_names.dart';
 
 import 'package:livwell/app/auth/pages/login_page.dart';
@@ -24,7 +24,7 @@ class Routes {
 
     // ----------Base Routes----------
     GetPage(name: AppRoute.home, page: () => HomePage()),
-    GetPage(name: AppRoute.register, page: () => RegistrationPage()),
+    GetPage(name: AppRoute.register, page: () => VolunteerPage()),
     GetPage(name: AppRoute.activity, page: () => const ActivityPage()),
     GetPage(name: AppRoute.notification, page: () => const NotificationPage()),
     GetPage(name: AppRoute.profile, page: () => ProfilePage()),

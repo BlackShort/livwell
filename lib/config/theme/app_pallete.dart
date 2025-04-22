@@ -5,8 +5,8 @@ class AppPallete {
   // dark-bg: 252525
   // rgba(51, 178, 185, 1
   static const Color backgroundColor = Color(0xFFF7F7F7);
-  static const Color lightprimary = Color(0xB315DA88);
-  static const Color primary = Color(0xFF15DA88);
+  static const Color lightprimary = Color.fromARGB(0, 9, 42, 54);
+  static const Color primary = Color.fromARGB(235, 13, 58, 75);
   static const Color dullprimary = Color(0xC00EBE75);
   static const Color secondary = Color(0xFF6E6E6E);
   static const Color white = Color(0xFFFFFFFF);
