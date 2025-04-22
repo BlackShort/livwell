@@ -14,7 +14,7 @@ class CauseController extends GetxController {
   void onInit() {
     super.onInit();
     _initCauses();
-    _loadUserInterests();
+    loadUserInterests();
   }
 
   void _initCauses() {
@@ -148,21 +148,25 @@ class CauseController extends GetxController {
     ];
   }
 
-  Future<void> _loadUserInterests() async {
+  // Change from private to public
+  Future<void> loadUserInterests() async {
     try {
       isLoading.value = true;
       final user = _auth.currentUser;
       if (user != null) {
-        final userData = await _firestore.collection('users').doc(user.uid).get();
-        
+        final userData =
+            await _firestore.collection('users').doc(user.uid).get();
+
         if (userData.exists && userData.data()!.containsKey('interests')) {
           final List<dynamic> interests = userData.data()!['interests'];
-          
+
           // Update the selected state based on user's interests
           for (int i = 0; i < causes.length; i++) {
             final cause = causes[i];
             if (interests.contains(cause.id)) {
               causes[i] = cause.copyWith(isSelected: true);
+            } else {
+              causes[i] = cause.copyWith(isSelected: false);
             }
           }
         }
@@ -184,17 +188,21 @@ class CauseController extends GetxController {
     try {
       final user = _auth.currentUser;
       if (user != null) {
-        final selectedCauseIds = causes
-            .where((cause) => cause.isSelected)
-            .map((cause) => cause.id)
-            .toList();
-        
+        final selectedCauseIds =
+            causes
+                .where((cause) => cause.isSelected)
+                .map((cause) => cause.id)
+                .toList();
+
         await _firestore.collection('users').doc(user.uid).update({
           'interests': selectedCauseIds,
         });
-        
-        Get.snackbar('Success', 'Your interests have been updated', 
-            snackPosition: SnackPosition.BOTTOM);
+
+        Get.snackbar(
+          'Success',
+          'Your interests have been updated',
+          snackPosition: SnackPosition.BOTTOM,
+        );
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to update your interests');
