@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:livwell/app/donation/controllers/donation_controller.dart';
 import 'package:livwell/app/donation/models/donation_model.dart';
 
-// Main donation list page
 class DonationPage extends StatelessWidget {
   DonationPage({super.key});
 
@@ -35,13 +34,17 @@ class DonationPage extends StatelessWidget {
                 );
               }
 
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: controller.filteredNGOs.length,
-                itemBuilder: (context, index) {
-                  final ngo = controller.filteredNGOs[index];
-                  return _buildNGOCard(ngo);
-                },
+              return RefreshIndicator(
+                onRefresh: controller.refreshNGOs,
+                color: Colors.orange,
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: controller.filteredNGOs.length,
+                  itemBuilder: (context, index) {
+                    final ngo = controller.filteredNGOs[index];
+                    return _buildNGOCard(ngo);
+                  },
+                ),
               );
             }),
           ),
@@ -77,6 +80,7 @@ class DonationPage extends StatelessWidget {
                     child: FilterChip(
                       label: Text(category),
                       selected: isSelected,
+                      checkmarkColor: Colors.white,
                       onSelected: (_) => controller.changeCategory(category),
                       backgroundColor: Colors.grey.shade100,
                       selectedColor: Colors.orange,
@@ -95,7 +99,8 @@ class DonationPage extends StatelessWidget {
   }
 
   Widget _buildNGOCard(NGOModel ngo) {
-    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
+    // Rest of the existing _buildNGOCard code remains the same
+    final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -170,6 +175,7 @@ class DonationPage extends StatelessWidget {
 
                 const SizedBox(height: 8),
 
+                // Rest of the card content remains the same...
                 // Description
                 Text(
                   ngo.description,
@@ -221,7 +227,7 @@ class DonationPage extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(
-                          Icons.monetization_on,
+                          Icons.currency_rupee,
                           color: Colors.green,
                           size: 16,
                         ),
@@ -304,7 +310,7 @@ class DonationPage extends StatelessWidget {
 class NGODetailPage extends StatelessWidget {
   final NGOModel ngo;
 
-  const NGODetailPage({Key? key, required this.ngo}) : super(key: key);
+  const NGODetailPage({super.key, required this.ngo});
 
   @override
   Widget build(BuildContext context) {
@@ -551,7 +557,7 @@ class NGODetailPage extends StatelessWidget {
 class DonationFormPage extends StatefulWidget {
   final NGOModel ngo;
 
-  const DonationFormPage({Key? key, required this.ngo}) : super(key: key);
+  const DonationFormPage({super.key, required this.ngo});
 
   @override
   State<DonationFormPage> createState() => _DonationFormPageState();

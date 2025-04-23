@@ -10,7 +10,7 @@ class EventModel {
   final String location;
   final DateTime date;
   final DateTime time;
-  final int duration; // in hours
+  final int duration;
   final int spots;
   final int registeredCount;
   final String organizerId;
@@ -23,36 +23,67 @@ class EventModel {
     required this.title,
     required this.description,
     required this.imageUrl,
-    required this.category,
+    this.category = 'General',
     required this.location,
     required this.date,
     required this.time,
-    required this.duration,
-    required this.spots,
+    this.duration = 1,
+    this.spots = 10,
     required this.registeredCount,
     required this.organizerId,
     required this.organizerName,
     required this.skills,
-    required this.isVirtual,
+    this.isVirtual = false,
   });
 
   factory EventModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    
+    // Safely handle date fields
+    DateTime dateValue;
+    try {
+      dateValue = data['date'] is Timestamp 
+          ? (data['date'] as Timestamp).toDate() 
+          : DateTime.now();
+    } catch (e) {
+      dateValue = DateTime.now();
+    }
+    
+    // Safely handle time (which might be missing)
+    DateTime timeValue;
+    try {
+      timeValue = data['time'] is Timestamp 
+          ? (data['time'] as Timestamp).toDate() 
+          : dateValue; // Use date as fallback
+    } catch (e) {
+      timeValue = dateValue;
+    }
+    
+    // Handle skills array which might be missing
+    List<String> skillsList = [];
+    try {
+      if (data['skills'] != null) {
+        skillsList = List<String>.from(data['skills']);
+      }
+    } catch (e) {
+      skillsList = [];
+    }
+
     return EventModel(
       id: doc.id,
       title: data['title'] ?? '',
       description: data['description'] ?? '',
       imageUrl: data['imageUrl'] ?? '',
-      category: data['category'] ?? '',
+      category: data['category'] ?? 'General',
       location: data['location'] ?? '',
-      date: (data['date'] as Timestamp).toDate(),
-      time: (data['time'] as Timestamp).toDate(),
+      date: dateValue,
+      time: timeValue,
       duration: data['duration'] ?? 1,
-      spots: data['spots'] ?? 0,
+      spots: data['spots'] ?? 10,
       registeredCount: data['registeredCount'] ?? 0,
       organizerId: data['organizerId'] ?? '',
       organizerName: data['organizerName'] ?? '',
-      skills: List<String>.from(data['skills'] ?? []),
+      skills: skillsList,
       isVirtual: data['isVirtual'] ?? false,
     );
   }

@@ -57,10 +57,11 @@ class ProfileController extends GetxController {
         await _fetchUserFromDatabase();
       }
     } catch (e) {
-      CustomSnackbar.showError(
-        title: 'Error',
-        message: 'Failed to load profile: $e',
-      );
+      print('Error loading user profile: $e');
+      // CustomSnackbar.showError(
+      //   title: 'Error',
+      //   message: 'Failed to load profile: $e',
+      // );
     } finally {
       isLoading(false);
     }
